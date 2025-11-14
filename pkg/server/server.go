@@ -4,25 +4,20 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	delivery "github.com/pvj08/effective-mobile/internal/delivery/http"
-	"github.com/pvj08/effective-mobile/pkg/config"
-	"github.com/pvj08/effective-mobile/pkg/logger"
+	"github.com/pvj08/avito-autumn-2025/pkg/config"
+	"github.com/pvj08/avito-autumn-2025/pkg/logger"
 )
 
 type Server struct {
 	logger logger.Logger
 	config config.Server
-	engine *gin.Engine
 	server *http.Server
 }
 
-func NewServer(logger logger.Logger, cfg config.Server, deps delivery.Deps) *Server {
-	eng := delivery.NewRouter(deps)
-
+func NewServer(logger logger.Logger, cfg config.Server, handler http.Handler) *Server {
 	s := &http.Server{
 		Addr:         cfg.Addr,
-		Handler:      eng,
+		Handler:      handler,
 		ReadTimeout:  cfg.ReadTimeout,
 		WriteTimeout: cfg.WriteTimeout,
 		IdleTimeout:  cfg.IdleTimeout,
@@ -31,7 +26,6 @@ func NewServer(logger logger.Logger, cfg config.Server, deps delivery.Deps) *Ser
 	return &Server{
 		logger: logger,
 		config: cfg,
-		engine: eng,
 		server: s,
 	}
 }
@@ -41,7 +35,9 @@ func (s *Server) Run(ctx context.Context) error {
 
 	// стартуем в горутине
 	go func() {
+		s.logger.Info("starting HTTP server", "addr", s.config.Addr)
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			s.logger.Error("http server error", "error", err)
 			errCh <- err
 			return
 		}
@@ -51,6 +47,7 @@ func (s *Server) Run(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		// получен сигнал на завершение — делаем graceful shutdown
+		s.logger.Info("shutdown signal received")
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), s.config.ShutdownTimeout)
 		defer cancel()
 		return s.server.Shutdown(shutdownCtx) // закрывает слушатель и корректно ждёт активные запросы
