@@ -1,0 +1,7 @@
+package: api
+
+generate:
+  gin-server: true
+  embedded-spec: true
+
+output: internal/delivery/http/openapi_server.gen.go

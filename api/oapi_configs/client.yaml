@@ -1,0 +1,6 @@
+package: api
+
+generate:
+  client: true
+
+output: internal/client/openapi_client.gen.go
