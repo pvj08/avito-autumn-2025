@@ -1,57 +1,54 @@
-package server
+package httpserver
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"time"
 
-	"github.com/pvj08/avito-autumn-2025/pkg/config"
 	"github.com/pvj08/avito-autumn-2025/pkg/logger"
 )
 
-type Server struct {
-	logger logger.Logger
-	config config.Server
-	server *http.Server
+type Config struct {
+	Host            string        `env:"HTTP_HOST"             env-default:"0.0.0.0"`
+	Port            int           `env:"HTTP_PORT"             env-default:"8080"`
+	ReadTimeout     time.Duration `env:"HTTP_READ_TIMEOUT"     env-default:"5s"`
+	WriteTimeout    time.Duration `env:"HTTP_WRITE_TIMEOUT"    env-default:"10s"`
+	IdleTimeout     time.Duration `env:"HTTP_IDLE_TIMEOUT"     env-default:"60s"`
+	MaxHeaderBytes  int           `env:"HTTP_MAX_HEADER_BYTES" env-default:"1048576"` // 1MB
+	ShutdownTimeout time.Duration `env:"HTTP_SHUTDOWN_TIMEOUT" env-default:"10s"`
 }
 
-func NewServer(logger logger.Logger, cfg config.Server, handler http.Handler) *Server {
+type Server struct {
+	server          *http.Server
+	shutdownTimeout time.Duration
+}
+
+func NewServer(logger logger.Logger, c Config, handler http.Handler) *Server {
+	addr := fmt.Sprintf("%s:%d", c.Host, c.Port)
+
 	s := &http.Server{
-		Addr:         cfg.Addr,
-		Handler:      handler,
-		ReadTimeout:  cfg.ReadTimeout,
-		WriteTimeout: cfg.WriteTimeout,
-		IdleTimeout:  cfg.IdleTimeout,
+		Addr:           addr,
+		Handler:        handler,
+		ReadTimeout:    c.ReadTimeout,
+		WriteTimeout:   c.WriteTimeout,
+		IdleTimeout:    c.IdleTimeout,
+		MaxHeaderBytes: c.MaxHeaderBytes,
 	}
 
 	return &Server{
-		logger: logger,
-		config: cfg,
-		server: s,
+		server:          s,
+		shutdownTimeout: c.ShutdownTimeout,
 	}
 }
 
-func (s *Server) Run(ctx context.Context) error {
-	errCh := make(chan error, 1)
+func (s *Server) Run() error {
+	return s.server.ListenAndServe()
+}
 
-	// стартуем в горутине
-	go func() {
-		s.logger.Info("starting HTTP server", "addr", s.config.Addr)
-		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			s.logger.Error("http server error", "error", err)
-			errCh <- err
-			return
-		}
-		errCh <- nil
-	}()
+func (s *Server) Close() error {
+	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
+	defer cancel()
 
-	select {
-	case <-ctx.Done():
-		// получен сигнал на завершение — делаем graceful shutdown
-		s.logger.Info("shutdown signal received")
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), s.config.ShutdownTimeout)
-		defer cancel()
-		return s.server.Shutdown(shutdownCtx) // закрывает слушатель и корректно ждёт активные запросы
-	case err := <-errCh:
-		return err
-	}
+	return s.server.Shutdown(ctx)
 }

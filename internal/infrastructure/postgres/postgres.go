@@ -1,4 +1,4 @@
-package db
+package postgres
 
 import (
 	"context"
@@ -9,15 +9,38 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/pvj08/avito-autumn-2025/pkg/config"
 	"github.com/pvj08/avito-autumn-2025/pkg/logger"
 )
 
+type Config struct {
+	User     string `envconfig:"POSTGRES_USER"     required:"true"`
+	Password string `envconfig:"POSTGRES_PASSWORD" required:"true"`
+	Port     string `envconfig:"POSTGRES_PORT"     required:"true"`
+	Host     string `envconfig:"POSTGRES_HOST"     required:"true"`
+	DBName   string `envconfig:"POSTGRES_DB_NAME"  required:"true"`
+
+	SSLMode    string        `envconfig:"POSTGRES_SSL_MODE"  default:"disable"`
+	RetryCount int           `envconfig:"POSTGRES_RETRY_CNT" default:"3"`
+	RetryDelay time.Duration `envconfig:"POSTGRES_RETRY_DUR" default:"2s"`
+}
+
+func (c Config) DSN() string {
+	sslmode := c.SSLMode
+	if sslmode == "" {
+		sslmode = "disable"
+	}
+
+	return fmt.Sprintf(
+		"user=%s password=%s host=%s port=%s dbname=%s sslmode=%s",
+		c.User, c.Password, c.Host, c.Port, c.DBName, sslmode,
+	)
+}
+
 var ErrDBConnectionFailed = errors.New("db connection failed")
 
-// ConnectDBWithRetry подключается к PostgreSQL с указанным количеством повторных попыток.
+// New подключается к PostgreSQL с указанным количеством повторных попыток.
 // Использует context с таймаутом для ping. Возвращает подключение *sqlx.DB или ошибку.
-func ConnectDBWithRetry(ctx context.Context, cfg config.DB, log logger.Logger) (*sqlx.DB, error) {
+func New(ctx context.Context, cfg config.DB, log logger.Logger) (*sqlx.DB, error) {
 	dsn := cfg.DSN()
 	log.Info("Connecting to database", "dsn", dsn)
 

@@ -32,7 +32,7 @@ type Handler struct {
 }
 
 func (h *Handler) PostTeamAdd(ctx *gin.Context) {
-	var body Team // Team из openapi_models.gen.go
+	var body Team // Team из openapi_models.gen.go // TODO: ⚠️❌⚠️❌⚠️PostTeamAddJSONRequestBody
 
 	if err := ctx.ShouldBindJSON(&body); err != nil {
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{
@@ -76,3 +76,6 @@ func (h *Handler) GetTeamGet(ctx *gin.Context, params GetTeamGetParams) {
 
 	ctx.JSON(http.StatusOK, team)
 }
+
+func teamDTOToDomain(t Team) domain.Team { ... }
+func prDTOToDomain(p PullRequest) domain.PullRequest { ... }
