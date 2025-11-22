@@ -4,4 +4,4 @@ generate:
   gin-server: true
   embedded-spec: true
 
-output: internal/delivery/http/openapi_server.gen.go
+output: internal/delivery/http/api/openapi_server.gen.go

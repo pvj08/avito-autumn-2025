@@ -6,12 +6,14 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 
 	"github.com/pvj08/avito-autumn-2025/internal/infrastructure/postgres"
+	"github.com/pvj08/avito-autumn-2025/pkg/logger"
 	httpserver "github.com/pvj08/avito-autumn-2025/pkg/server"
 )
 
 type Config struct {
-	DB     postgres.Config   `env-prefix:"POSTGRES"`
-	Server httpserver.Server `env-prefix:"HTTP"`
+	Postgres postgres.Config   `env-prefix:"POSTGRES"`
+	Server   httpserver.Config `env-prefix:"HTTP"`
+	Logger   logger.Config     `env-prefix:"LOG"`
 }
 
 func MustLoad() Config {

@@ -24,23 +24,9 @@ type Config struct {
 	RetryDelay time.Duration `envconfig:"POSTGRES_RETRY_DUR" default:"2s"`
 }
 
-func (c Config) DSN() string {
-	sslmode := c.SSLMode
-	if sslmode == "" {
-		sslmode = "disable"
-	}
-
-	return fmt.Sprintf(
-		"user=%s password=%s host=%s port=%s dbname=%s sslmode=%s",
-		c.User, c.Password, c.Host, c.Port, c.DBName, sslmode,
-	)
-}
-
-var ErrDBConnectionFailed = errors.New("db connection failed")
-
 // New подключается к PostgreSQL с указанным количеством повторных попыток.
 // Использует context с таймаутом для ping. Возвращает подключение *sqlx.DB или ошибку.
-func New(ctx context.Context, cfg config.DB, log logger.Logger) (*sqlx.DB, error) {
+func New(ctx context.Context, cfg Config, log logger.Logger) (*sqlx.DB, error) {
 	dsn := cfg.DSN()
 	log.Info("Connecting to database", "dsn", dsn)
 
@@ -71,3 +57,17 @@ func New(ctx context.Context, cfg config.DB, log logger.Logger) (*sqlx.DB, error
 
 	return nil, fmt.Errorf("%w: %v", ErrDBConnectionFailed, err)
 }
+
+func (c Config) DSN() string {
+	sslmode := c.SSLMode
+	if sslmode == "" {
+		sslmode = "disable"
+	}
+
+	return fmt.Sprintf(
+		"user=%s password=%s host=%s port=%s dbname=%s sslmode=%s",
+		c.User, c.Password, c.Host, c.Port, c.DBName, sslmode,
+	)
+}
+
+var ErrDBConnectionFailed = errors.New("db connection failed")

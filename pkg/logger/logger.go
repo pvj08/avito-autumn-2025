@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+type Config struct {
+	Level string `envconfig:"LOG_LEVEL"     required:"true"`
+}
+
 type Logger interface {
 	Debug(msg string, args ...any)
 	Info(msg string, args ...any)
@@ -14,9 +18,8 @@ type Logger interface {
 }
 
 // Init инициализирует глобальный JSON логгер с уровнем из ENV (LOG_LEVEL).
-func SetupLogger() *slog.Logger {
-	level := os.Getenv("LOG_LEVEL")
-	lvl := parseLogLevel(level)
+func SetupLogger(c Config) *slog.Logger {
+	lvl := parseLogLevel(c.Level)
 
 	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: lvl,

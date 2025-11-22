@@ -4,4 +4,4 @@ package: api
 generate:
   models: true
 
-output: internal/delivery/http/openapi_types.gen.go
+output: internal/delivery/http/api/openapi_types.gen.go

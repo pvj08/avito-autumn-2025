@@ -1,35 +1,33 @@
-package api
+package handler
 
 import "github.com/pvj08/avito-autumn-2025/pkg/logger"
 
-type PullRequestService interface {
-	// TODO: define methods for pull request operations
-}
-
-type Deps struct { // Dependencies
-	Logger logger.Logger
-	Uc     PullRequestService
-}
-
-type PullRequestHandler struct {
-	log  logger.Logger
-	prUC PullRequestService
-}
-
-func NewPullRequestHandler(deps Deps) *PullRequestHandler {
-	return &PullRequestHandler{
-		log:  deps.Logger,
-		prUC: deps.Uc,
-	}
-}
-
-func (h *PullRequestHandler) List() {}
-
 type Handler struct {
-	teamUC TeamUsecase
-	userUC UserUsecase
-	prUC   PullRequestUsecase
+	TeamUC TeamUsecase
+	UserUC UserUsecase
+	PrUC   PullRequestUsecase
 }
+
+func NewHandler(userUC user.Usecase, teamUC team.Usecase, prUC pullrequest.Usecase) *Handler {
+    return &Handler{
+        userUC: userUC,
+        teamUC: teamUC,
+        prUC:   prUC,
+    }
+}
+
+/*
+// ServerInterface represents all server handlers.
+type ServerInterface interface {
+	PostPullRequestCreate(c *gin.Context)
+	PostPullRequestMerge(c *gin.Context)
+	PostPullRequestReassign(c *gin.Context)
+	PostTeamAdd(c *gin.Context)
+	GetTeamGet(c *gin.Context, params GetTeamGetParams)
+	GetUsersGetReview(c *gin.Context, params GetUsersGetReviewParams)
+	PostUsersSetIsActive(c *gin.Context)
+}
+*/
 
 func (h *Handler) PostTeamAdd(ctx *gin.Context) {
 	var body Team // Team из openapi_models.gen.go // TODO: ⚠️❌⚠️❌⚠️PostTeamAddJSONRequestBody
