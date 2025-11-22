@@ -11,15 +11,13 @@ import (
 
 type Config struct {
 	DB     postgres.Config   `env-prefix:"POSTGRES"`
-	Server httpserver.Server `env-prefix:"SERVER"`
+	Server httpserver.Server `env-prefix:"HTTP"`
 }
 
-func MustLoad() (*Config, error) {
-	var cfg *Config
-
+func MustLoad() Config {
+	var cfg Config
 	if err := cleanenv.ReadEnv(cfg); err != nil {
-		return nil, fmt.Errorf("failed to load config: %v\n", err)
+		panic(fmt.Errorf("config error: %w", err))
 	}
-
-	return cfg, nil
+	return cfg
 }
