@@ -19,55 +19,47 @@ const (
 type PullRequest struct {
 	// AssignedReviewers user_id назначенных ревьюверов (0..2)
 	AssignedReviewers []string
-	AuthorId          string
-	CreatedAt         *time.Time
-	MergedAt          *time.Time
-	PullRequestId     string
+	AuthorID          string
+	PullRequestID     string
 	PullRequestName   string
 	Status            PullRequestStatus
+
+	CreatedAt *time.Time
+	MergedAt  *time.Time
 }
 
 // PullRequestShort defines model for PullRequestShort.
 type PullRequestShort struct {
-	AuthorId        string
-	PullRequestId   string
+	AuthorID        string
+	PullRequestID   string
 	PullRequestName string
 	Status          PullRequestShortStatus
 }
 
 type CreateInput struct {
-	AuthorId        string
-	PullRequestId   string
+	AuthorID        string
+	PullRequestID   string
 	PullRequestName string
 }
 
 type CreateOutput struct {
-	PullRequestId     string
-	PullRequestName   string
-	AuthorId          string
-	Status            PullRequestStatus
-	AssignedReviewers []string
+	PullRequest
 }
 
 type MergeInput struct {
-	PullRequestId string
+	PullRequestID string
 }
 
 type MergeOutput struct {
-	PullRequestId     string
-	PullRequestName   string
-	AuthorId          string
-	Status            PullRequestStatus
-	AssignedReviewers []string
-	MergedAt          *time.Time
+	PullRequest
 }
 
 type ReassignInput struct {
-	PullRequestId string
+	PullRequestID string
 	UserID        string
 }
 
 type ReassignOutput struct {
-	PR         PullRequest
+	PullRequest
 	ReplacedBy string
 }

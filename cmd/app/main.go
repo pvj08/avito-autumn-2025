@@ -46,9 +46,9 @@ func AppRun(ctx context.Context, cfg config.Config, log logger.Logger) error {
 	prRepo := postgres.NewPullRequestRepo(pg)
 
 	// Usecase (Service)
-	userUC := user.NewUserUsecase(log, userRepo)
-	teamUC := team.NewTeamUsecase(log, teamRepo)
-	prUC := pullrequest.NewPullRequestUsecase(log, prRepo)
+	userUC := user.New(log, userRepo)
+	teamUC := team.New(log, teamRepo)
+	prUC := pullrequest.New(log, prRepo)
 
 	r := gin.Default()
 	h := handler.NewHandler(userUC, teamUC, prUC)

@@ -8,16 +8,16 @@ import (
 )
 
 type Handler struct {
-	userUC user.UserUsecase
-	teamUC team.TeamUsecase
-	prUC   pullrequest.PullRequestUsecase
+	user user.Usecase
+	team team.Usecase
+	pr   pullrequest.Usecase
 }
 
-func NewHandler(userUC user.UserUsecase, teamUC team.TeamUsecase, prUC pullrequest.PullRequestUsecase) *Handler {
+func NewHandler(userUC user.Usecase, teamUC team.Usecase, prUC pullrequest.Usecase) *Handler {
 	return &Handler{
-		userUC: userUC,
-		teamUC: teamUC,
-		prUC:   prUC,
+		user: userUC,
+		team: teamUC,
+		pr:   prUC,
 	}
 }
 
@@ -26,6 +26,11 @@ func newErrorResponse(code api.ErrorResponseErrorCode, msg string) api.ErrorResp
 	e.Error.Code = code
 	e.Error.Message = msg
 	return e
+}
+
+func mapErrorToErrorResponse(err error) api.ErrorResponse {
+	// TODO
+	return api.ErrorResponse{}
 }
 
 /*

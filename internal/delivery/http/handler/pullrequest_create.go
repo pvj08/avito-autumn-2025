@@ -1,5 +1,13 @@
 package handler
 
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pvj08/avito-autumn-2025/internal/delivery/http/api"
+	"github.com/pvj08/avito-autumn-2025/internal/usecase/pullrequest"
+)
+
 func (h *Handler) PostPullRequestCreate(c *gin.Context) {
 	var req api.PostPullRequestCreateJSONRequestBody
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -7,20 +15,27 @@ func (h *Handler) PostPullRequestCreate(c *gin.Context) {
 		return
 	}
 
-	output, err := h.profileService.CreateProfile(r.Context(), PullRequest.CreateInput{ // TODO: DTO struct
-		req.AuthorId,
-		req.PullRequestId,
-		req.PullRequestName
+	out, err := h.pr.Create(c.Request.Context(), pullrequest.CreateInput{
+		AuthorID:        req.AuthorId,
+		PullRequestID:   req.PullRequestId,
+		PullRequestName: req.PullRequestName,
 	})
 
 	if err != nil {
-		errResp := mapErrorToErrorResponse(err) // TODO map func
-		c.JSON(errResp.HTTPStatus, errResp)
+		errResp := mapErrorToErrorResponse(err)
+		c.JSON(500, errResp) // TODO: proper status code
 		return
 	}
 
-	c.JSON(http.StatusOK, output) // TODO: map output to delivery DTO
-	/*
-	или мне тут похуй и я могу не мапить, а просто возвращать доменный объект?
-	*/
+	resp := PostPullRequestCreateResponse{
+		PR: PullRequest{
+			PullRequestID:     out.PullRequestID,
+			PullRequestName:   out.PullRequestName,
+			AuthorID:          out.AuthorID,
+			Status:            string(out.Status),
+			AssignedReviewers: out.AssignedReviewers,
+		},
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
