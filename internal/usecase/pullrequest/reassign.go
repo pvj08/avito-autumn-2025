@@ -40,7 +40,7 @@ func (u *usecase) Reassign(c context.Context, input ReassignInput) (ReassignOutp
 		}
 
 		// 4. Берём команду ревьювера и список участников
-		team, err := u.teamRepo.GetByUserID(ctx, input.UserID)
+		team, err := u.teamReader.GetByUserID(ctx, input.UserID)
 		if err != nil {
 			if errors.Is(err, domain.ErrNotFound) {
 				return err

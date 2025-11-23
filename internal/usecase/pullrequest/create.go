@@ -13,7 +13,7 @@ func (u *usecase) Create(c context.Context, input CreateInput) (CreateOutput, er
 
 	err := u.tx.Do(c, func(ctx context.Context) error {
 		// 1. достаём команду автора
-		team, err := u.teamRepo.GetByUserID(ctx, input.AuthorID)
+		team, err := u.teamReader.GetByUserID(ctx, input.AuthorID)
 		if err != nil {
 			if errors.Is(err, domain.ErrNotFound) {
 				return err
@@ -28,13 +28,7 @@ func (u *usecase) Create(c context.Context, input CreateInput) (CreateOutput, er
 		}
 
 		// 3. собираем доменную модель
-		pr := domain.PullRequest{
-			PullRequestID:     input.PullRequestID,
-			PullRequestName:   input.PullRequestName,
-			AuthorID:          input.AuthorID,
-			AssignedReviewers: reviewers,
-			Status:            domain.PullRequestStatusOPEN,
-		}
+		pr := fromAddInputToDomainPR(input, reviewers)
 
 		created, err := u.prRepo.Create(ctx, pr)
 		if err != nil {
@@ -45,15 +39,7 @@ func (u *usecase) Create(c context.Context, input CreateInput) (CreateOutput, er
 		}
 
 		out = CreateOutput{
-			PullRequest: PullRequest{
-				AssignedReviewers: created.AssignedReviewers,
-				AuthorID:          created.AuthorID,
-				PullRequestID:     created.PullRequestID,
-				PullRequestName:   created.PullRequestName,
-				Status:            PullRequestStatus(created.Status),
-				CreatedAt:         created.CreatedAt,
-				MergedAt:          created.MergedAt,
-			},
+			PullRequest: fromDomainPullRequest(created),
 		}
 
 		return nil

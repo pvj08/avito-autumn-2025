@@ -63,3 +63,12 @@ type ReassignOutput struct {
 	PullRequest
 	ReplacedBy string
 }
+
+type GetReviewInput struct {
+	UserID string
+}
+
+type GetReviewOutput struct {
+	UserID       string
+	PullRequests []PullRequestShort
+}

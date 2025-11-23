@@ -15,12 +15,21 @@ func (u *usecase) Add(c context.Context, input AddInput) (AddOutput, error) {
 		// DTO -> domain
 		domainTeam := toDomainTeam(input)
 
-		created, err := u.repo.Create(ctx, domainTeam)
+		created, err := u.teamRepo.Create(ctx, domainTeam)
 		if err != nil {
 			if errors.Is(err, domain.ErrAlreadyExists) {
 				return err
 			}
 			return fmt.Errorf("failed to create team: %w", err)
+		}
+
+		for _, member := range input.Members {
+			user := toDomainUser(member, input.TeamName)
+
+			err = u.userCreator.Create(ctx, user)
+			if err != nil && !errors.Is(err, domain.ErrAlreadyExists) {
+				return fmt.Errorf("failed to add member to team: %w", err)
+			}
 		}
 
 		// domain -> DTO
@@ -32,4 +41,13 @@ func (u *usecase) Add(c context.Context, input AddInput) (AddOutput, error) {
 	})
 
 	return out, err
+}
+
+func toDomainUser(member TeamMember, tname string) domain.User {
+	return domain.User{
+		IsActive: member.IsActive,
+		UserID:   member.UserID,
+		Username: member.Username,
+		TeamName: tname,
+	}
 }

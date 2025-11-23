@@ -9,30 +9,34 @@ import (
 )
 
 type TeamRepository interface {
-	// TODO: объявить интерфейс репозитория
 	GetByUserID(ctx context.Context, userID string) (domain.Team, error)
 	GetByTeamName(ctx context.Context, teamName string) (domain.Team, error)
 	Create(ctx context.Context, team domain.Team) (domain.Team, error)
 }
 
+type UserCreator interface {
+	Create(ctx context.Context, user domain.User) error
+}
+
 type Usecase interface {
 	// Создать команду с участниками (создаёт/обновляет пользователей)
 	Add(c context.Context, input AddInput) (AddOutput, error)
-
 	Get(c context.Context, input GetInput) (GetOutput, error)
 }
 
 type usecase struct {
-	tx   txmanager.TxManager
-	repo TeamRepository
-	log  logger.Logger
+	tx          txmanager.TxManager
+	teamRepo    TeamRepository
+	userCreator UserCreator
+	log         logger.Logger
 }
 
-func New(tx txmanager.TxManager, repo TeamRepository, log logger.Logger) *usecase {
+func New(tx txmanager.TxManager, t TeamRepository, u UserCreator, log logger.Logger) *usecase {
 	return &usecase{
-		tx:   tx,
-		repo: repo,
-		log:  log,
+		tx:          tx,
+		teamRepo:    t,
+		userCreator: u,
+		log:         log,
 	}
 }
 

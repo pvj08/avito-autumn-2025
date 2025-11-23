@@ -12,6 +12,7 @@ func (u *usecase) Merge(c context.Context, input MergeInput) (MergeOutput, error
 	var out MergeOutput
 
 	err := u.tx.Do(c, func(ctx context.Context) error {
+		// достаём pull request по ID
 		pr, err := u.prRepo.GetByID(ctx, input.PullRequestID)
 		if err != nil {
 			if errors.Is(err, domain.ErrNotFound) {
@@ -20,22 +21,24 @@ func (u *usecase) Merge(c context.Context, input MergeInput) (MergeOutput, error
 			return fmt.Errorf("failed to get team: %w", err)
 		}
 
+		// уже MERGED → просто отдаем как есть, без Save
+		if pr.Status == domain.PullRequestStatusMERGED {
+			out = MergeOutput{
+				PullRequest: fromDomainPullRequest(pr),
+			}
+			return nil
+		}
+
+		// вызываем метод доменной модели для смены статуса
 		pr.Merge()
 
+		// сохраняем изменения в репозитории
 		if err := u.prRepo.Save(ctx, pr); err != nil {
 			return err
 		}
 
 		out = MergeOutput{
-			PullRequest{
-				AssignedReviewers: pr.AssignedReviewers,
-				AuthorID:          pr.AuthorID,
-				PullRequestID:     pr.PullRequestID,
-				PullRequestName:   pr.PullRequestName,
-				Status:            PullRequestStatus(pr.Status),
-				CreatedAt:         pr.CreatedAt,
-				MergedAt:          pr.MergedAt,
-			},
+			PullRequest: fromDomainPullRequest(pr),
 		}
 
 		return nil

@@ -12,7 +12,7 @@ func (u *usecase) Get(c context.Context, input GetInput) (GetOutput, error) {
 	var out GetOutput
 
 	err := u.tx.Do(c, func(ctx context.Context) error {
-		team, err := u.repo.GetByTeamName(ctx, input.TeamName)
+		team, err := u.teamRepo.GetByTeamName(ctx, input.TeamName)
 		if err != nil {
 			if errors.Is(err, domain.ErrNotFound) {
 				return err
