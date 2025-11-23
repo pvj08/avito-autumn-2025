@@ -1,4 +1,4 @@
-package pullrequest
+package handler
 
 func (h *Handler) PostPullRequestCreate(c *gin.Context) {
 	var req api.PostPullRequestCreateJSONRequestBody
