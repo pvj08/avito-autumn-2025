@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 type UserID string
 type TeamID string
 type PullRequestID string
@@ -12,32 +14,30 @@ const (
 )
 
 type User struct {
-	ID       UserID `json:"id"`
-	Name     string `json:"name"`
-	IsActive bool   `json:"is_active"`
+	ID       UserID
+	Name     string
+	IsActive bool
 
 	// один пользователь — одна команда
-	TeamID TeamID `json:"team_id"`
+	TeamID TeamID
 }
 
 type Team struct {
-	ID   TeamID `json:"id"`
-	Name string `json:"name"`
+	ID   TeamID
+	Name string
 
-	MemberIDs []UserID `json:"member_ids"`
+	MemberIDs []UserID
 }
 
 type PullRequest struct {
-	ID    PullRequestID `json:"id"`
-	Title string        `json:"title"`
+	ID    PullRequestID
+	Title string
 
-	AuthorID UserID   `json:"author_id"`
-	Status   PRStatus `json:"status"`
+	AuthorID UserID
+	Status   PRStatus
 
-	// Список назначенных ревьюверов (0..2).
-	// Инварианты:
-	//  - не более двух элементов;
-	//  - не должен содержать автора;
-	//  - изменяется только когда Status == OPEN.
-	ReviewerIDs []UserID `json:"reviewer_ids"`
+	ReviewerIDs []UserID
+
+	MergedAt  *time.Time
+	CreatedAt *time.Time
 }

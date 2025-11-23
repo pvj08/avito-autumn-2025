@@ -32,36 +32,3 @@ func mapErrorToErrorResponse(err error) api.ErrorResponse {
 	// TODO
 	return api.ErrorResponse{}
 }
-
-/*
-func (h *Handler) PostTeamAdd(c *gin.Context) {
-	// маппишь в domain-модель или сразу кидаешь в usecase
-	team, err := h.teamUC.CreateOrUpdate(c, body)
-	if err != nil {
-		// маппишь доменную ошибку в ErrorResponse
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"team": team, // можно вернуть тот же Team или DTO
-	})
-}
-
-func (h *Handler) GetTeamGet(c *gin.Context, params GetTeamGetParams) {
-	team, err := h.teamUC.GetByName(c, params.TeamName)
-	if err != nil {
-		// если не найдено
-		c.JSON(http.StatusNotFound, ErrorResponse{
-			Error: struct {
-				Code    string `json:"code"`
-				Message string `json:"message"`
-			}{
-				Code:    "NOT_FOUND",
-				Message: "team not found",
-			},
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, team)
-}
-*/

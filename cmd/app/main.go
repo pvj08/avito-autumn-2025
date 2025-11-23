@@ -13,6 +13,7 @@ import (
 	"github.com/pvj08/avito-autumn-2025/internal/delivery/http/api"
 	"github.com/pvj08/avito-autumn-2025/internal/delivery/http/handler"
 	"github.com/pvj08/avito-autumn-2025/internal/infrastructure/postgres"
+	"github.com/pvj08/avito-autumn-2025/internal/infrastructure/txmanager"
 	"github.com/pvj08/avito-autumn-2025/internal/usecase/pullrequest"
 	"github.com/pvj08/avito-autumn-2025/internal/usecase/team"
 	"github.com/pvj08/avito-autumn-2025/internal/usecase/user"
@@ -40,15 +41,18 @@ func AppRun(ctx context.Context, cfg config.Config, log logger.Logger) error {
 		return fmt.Errorf("postgres.New: %w", err)
 	}
 
+	// TxManager
+	txMgr := txmanager.NewSqlx(pg)
+
 	// Repos
 	userRepo := postgres.NewUserRepo(pg)
 	teamRepo := postgres.NewTeamRepo(pg)
 	prRepo := postgres.NewPullRequestRepo(pg)
 
 	// Usecase (Service)
-	userUC := user.New(log, userRepo)
-	teamUC := team.New(log, teamRepo)
-	prUC := pullrequest.New(log, prRepo)
+	userUC := user.New(txMgr, userRepo, log)
+	teamUC := team.New(txMgr, teamRepo, log)
+	prUC := pullrequest.New(txMgr, prRepo, log)
 
 	r := gin.Default()
 	h := handler.NewHandler(userUC, teamUC, prUC)

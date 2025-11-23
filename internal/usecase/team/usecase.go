@@ -3,6 +3,7 @@ package team
 import (
 	"context"
 
+	"github.com/pvj08/avito-autumn-2025/internal/infrastructure/txmanager"
 	"github.com/pvj08/avito-autumn-2025/pkg/logger"
 )
 
@@ -18,13 +19,15 @@ type Usecase interface {
 }
 
 type usecase struct {
-	log  logger.Logger
+	tx   txmanager.TxManager
 	repo TeamRepository
+	log  logger.Logger
 }
 
-func New(log logger.Logger, repo TeamRepository) *usecase {
+func New(tx txmanager.TxManager, repo TeamRepository, log logger.Logger) *usecase {
 	return &usecase{
-		log:  log,
+		tx:   tx,
 		repo: repo,
+		log:  log,
 	}
 }
