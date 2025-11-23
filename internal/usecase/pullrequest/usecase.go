@@ -2,16 +2,17 @@ package pullrequest
 
 import (
 	"context"
+	"math/rand"
+	"time"
 
 	"github.com/pvj08/avito-autumn-2025/internal/domain"
 	"github.com/pvj08/avito-autumn-2025/internal/infrastructure/txmanager"
+	"github.com/pvj08/avito-autumn-2025/internal/usecase/team"
 	"github.com/pvj08/avito-autumn-2025/pkg/logger"
 )
 
-type PullRequestRepository interface {
-	Create(ctx context.Context, pr domain.PullRequest) (domain.PullRequest, error)
-	GetByID(ctx context.Context, id string) (domain.PullRequest, error)
-	Update(ctx context.Context, pr domain.PullRequest) error
+func init() {
+	rand.Seed(time.Now().UnixNano())
 }
 
 type Usecase interface {
@@ -25,61 +26,92 @@ type Usecase interface {
 	Reassign(c context.Context, input ReassignInput) (ReassignOutput, error)
 }
 
-type usecase struct {
-	tx   txmanager.TxManager
-	repo PullRequestRepository
-	log  logger.Logger
+type PullRequestRepository interface {
+	Create(ctx context.Context, pr domain.PullRequest) (domain.PullRequest, error)
+	GetByID(ctx context.Context, id string) (domain.PullRequest, error)
+	Update(ctx context.Context, pr domain.PullRequest) error
+	Save(ctx context.Context, pr domain.PullRequest) error
 }
 
-func New(tx txmanager.TxManager, repo PullRequestRepository, log logger.Logger) *usecase {
+type usecase struct {
+	tx       txmanager.TxManager
+	prRepo   PullRequestRepository
+	teamRepo team.TeamRepository
+	log      logger.Logger
+}
+
+func New(
+	tx txmanager.TxManager,
+	prRepo PullRequestRepository,
+	teamRepo team.TeamRepository,
+	log logger.Logger,
+) *usecase {
 	return &usecase{
-		tx:   tx,
-		repo: repo,
-		log:  log,
+		tx:       tx,
+		prRepo:   prRepo,
+		teamRepo: teamRepo,
+		log:      log,
 	}
 }
 
-// func (u *usecase) Create(ctx context.Context, input CreateInput) (CreateOutput, error) {
-// 	log := u.log.With("method", "Create", "author_id", input.AuthorID)
+// выбирает до 2 активных ревьюверов из команды, исключая ID автора.
+func chooseReviewers(team domain.Team, authorID string) ([]string, error) {
+	candidates := make([]string, 0, len(team.Members))
 
-// 	author, err := u.repo.GetByID(ctx, input.AuthorID)
-// 	if err != nil {
-// 		log.Error("failed to get author", "err", err)
-// 		return CreateOutput{}, err // тут лучше завернуть в доменную ошибку
-// 	}
+	// 1. фильтруем подходящих
+	for _, m := range team.Members {
+		if !m.IsActive {
+			continue
+		}
+		if m.UserID == authorID {
+			continue
+		}
+		candidates = append(candidates, m.UserID)
+	}
 
-// 	// Кандидаты — активные из команды автора, без самого автора
-// 	exclude := []string{author.ID}
-// 	candidates, err := u.repo.ListActiveByTeamExcept(ctx, author.TeamID, exclude, 2)
-// 	if err != nil {
-// 		log.Error("failed to list candidates", "err", err)
-// 		return CreateOutput{}, err
-// 	}
+	// 2. нет кандидатов
+	if len(candidates) == 0 {
+		return []string{}, domain.ErrNoCandidate
+	}
 
-// 	reviewerIDs := make([]string, 0, 2)
-// 	for _, c := range candidates {
-// 		reviewerIDs = append(reviewerIDs, c.ID)
-// 	}
+	// 3. один кандидат
+	if len(candidates) == 1 {
+		return []string{candidates[0]}, nil
+	}
 
-// 	pr := domain.PullRequest{
-// 		// ID, скорее всего, генерит БД (serial/uuid), можешь оставить пустым
-// 		Title:       input.Title,
-// 		AuthorID:    author.ID,
-// 		Status:      domain.PRStatusOpen,
-// 		ReviewerIDs: reviewerIDs,
-// 	}
+	// 4. два или больше — выбираем случайные два
+	// перемешаем кандидатов
+	rand.Shuffle(len(candidates), func(i, j int) {
+		candidates[i], candidates[j] = candidates[j], candidates[i]
+	})
 
-// 	created, err := u.prRepo.Create(ctx, pr)
-// 	if err != nil {
-// 		log.Error("failed to create pr", "err", err)
-// 		return CreateOutput{}, err
-// 	}
+	// берём первые два
+	return candidates[:2], nil
+}
 
-// 	return CreateOutput{
-// 		ID:          created.ID,
-// 		Title:       created.Title,
-// 		AuthorID:    created.AuthorID,
-// 		Status:      string(created.Status),
-// 		ReviewerIDs: created.ReviewerIDs,
-// 	}, nil
-// }
+// выбирает одного ревьювера из команды, исключая ID автора и exceptID.
+func reassignChooseReviewer(team domain.Team, authorID, exceptID string) (string, error) {
+	candidates := make([]string, 0, len(team.Members))
+
+	// 1. фильтруем активных участников команды, исключая автора и exceptID
+	for _, m := range team.Members {
+		if !m.IsActive {
+			continue
+		}
+		if m.UserID == authorID {
+			continue
+		}
+		if m.UserID == exceptID {
+			continue
+		}
+		candidates = append(candidates, m.UserID)
+	}
+
+	// нет доступных ревьюверов
+	if len(candidates) == 0 {
+		return "", domain.ErrNoCandidate
+	}
+
+	// выбираем случайно одного
+	return candidates[rand.Intn(len(candidates))], nil
+}

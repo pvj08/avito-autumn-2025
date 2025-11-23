@@ -92,3 +92,8 @@ func AppRun(ctx context.Context, cfg config.Config, log logger.Logger) error {
 
 в models
 */
+
+// TODO:
+// 1. PullRequest ID в бд должен быть уникальным
+// 2. При создании ПР, если такой уже есть, возвращать ошибку PREXISTS
+// 3. При мердже ПР, если его нет, возвращать ошибку NOTFOUND

@@ -7,7 +7,7 @@ type Team struct {
 
 type TeamMember struct {
 	IsActive bool
-	UserId   string
+	UserID   string
 	Username string
 }
 

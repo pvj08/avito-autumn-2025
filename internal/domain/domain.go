@@ -2,42 +2,45 @@ package domain
 
 import "time"
 
-type UserID string
-type TeamID string
-type PullRequestID string
-
-type PRStatus string
+type PullRequestStatus string
 
 const (
-	PRStatusOpen   PRStatus = "OPEN"
-	PRStatusMerged PRStatus = "MERGED"
+	PullRequestStatusMERGED PullRequestStatus = "MERGED"
+	PullRequestStatusOPEN   PullRequestStatus = "OPEN"
 )
 
-type User struct {
-	ID       UserID
-	Name     string
-	IsActive bool
+type PullRequest struct {
+	// AssignedReviewers user_id назначенных ревьюверов (0..2)
+	AssignedReviewers []string
+	AuthorID          string
+	PullRequestID     string
+	PullRequestName   string
+	Status            PullRequestStatus
 
-	// один пользователь — одна команда
-	TeamID TeamID
+	CreatedAt *time.Time
+	MergedAt  *time.Time
+}
+
+type User struct {
+	IsActive bool
+	TeamName string
+	UserID   string
+	Username string
 }
 
 type Team struct {
-	ID   TeamID
-	Name string
-
-	MemberIDs []UserID
+	Members  []TeamMember
+	TeamName string
 }
 
-type PullRequest struct {
-	ID    PullRequestID
-	Title string
+type TeamMember struct {
+	IsActive bool
+	UserID   string
+	Username string
+}
 
-	AuthorID UserID
-	Status   PRStatus
-
-	ReviewerIDs []UserID
-
-	MergedAt  *time.Time
-	CreatedAt *time.Time
+func (pr *PullRequest) Merge() {
+	pr.Status = PullRequestStatusMERGED
+	now := time.Now()
+	pr.MergedAt = &now
 }
