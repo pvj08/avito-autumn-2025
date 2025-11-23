@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -22,6 +23,13 @@ type Config struct {
 	SSLMode    string        `envconfig:"POSTGRES_SSL_MODE"  default:"disable"`
 	RetryCount int           `envconfig:"POSTGRES_RETRY_CNT" default:"3"`
 	RetryDelay time.Duration `envconfig:"POSTGRES_RETRY_DUR" default:"2s"`
+}
+
+type dbExecutor interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryRowxContext(ctx context.Context, query string, args ...any) *sqlx.Row
+	GetContext(ctx context.Context, dest any, query string, args ...any) error
+	SelectContext(ctx context.Context, dest any, query string, args ...any) error
 }
 
 // New подключается к PostgreSQL с указанным количеством повторных попыток.

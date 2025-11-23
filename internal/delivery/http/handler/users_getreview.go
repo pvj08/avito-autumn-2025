@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pvj08/avito-autumn-2025/internal/delivery/http/api"
-	"github.com/pvj08/avito-autumn-2025/internal/usecase/user"
+	"github.com/pvj08/avito-autumn-2025/internal/usecase/pullrequest"
 )
 
 func (h *Handler) GetUsersGetReview(c *gin.Context, params api.GetUsersGetReviewParams) {
-	out, err := h.user.GetReview(c.Request.Context(), user.GetReviewInput{
+	out, err := h.pr.GetReview(c.Request.Context(), pullrequest.GetReviewInput{
 		UserID: params.UserId,
 	})
 

@@ -12,7 +12,7 @@ type PullRequestRepository interface {
 	Create(ctx context.Context, pr domain.PullRequest) (domain.PullRequest, error)
 	GetByID(ctx context.Context, id string) (domain.PullRequest, error)
 	GetByUserID(ctx context.Context, userID string) ([]domain.PullRequest, error)
-	Update(ctx context.Context, pr domain.PullRequest) error
+	// Update(ctx context.Context, pr domain.PullRequest) error
 	Save(ctx context.Context, pr domain.PullRequest) error
 }
 

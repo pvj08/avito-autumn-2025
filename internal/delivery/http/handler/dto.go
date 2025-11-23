@@ -39,7 +39,7 @@ type Team struct {
 }
 
 type TeamMember struct {
-	UserId   string `json:"user_id"`
+	UserID   string `json:"user_id"`
 	Username string `json:"username"`
 	IsActive bool   `json:"is_active"`
 }
@@ -79,7 +79,7 @@ func toDomainMembers(ms []api.TeamMember) []team.TeamMember {
 	for i, m := range ms {
 		res[i] = team.TeamMember{
 			IsActive: m.IsActive,
-			UserId:   m.UserId,
+			UserID:   m.UserId,
 			Username: m.Username,
 		}
 	}
@@ -91,7 +91,7 @@ func toResponseMembers(members []team.TeamMember) []TeamMember {
 	for i, m := range members {
 		res[i] = TeamMember{
 			IsActive: m.IsActive,
-			UserId:   m.UserId,
+			UserID:   m.UserID,
 			Username: m.Username,
 		}
 	}
