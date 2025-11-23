@@ -1,4 +1,4 @@
-package handler
+package users
 
 func (h *Handler) PostUsersSetIsActive(c *gin.Context) {
 	var req api.PostUsersSetIsActiveJSONRequestBody

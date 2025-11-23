@@ -1,4 +1,4 @@
-package handler
+package pullrequest
 
 func (h *Handler) PostPullRequestMerge(c *gin.Context) {
 	var req api.PostPullRequestMergeJSONRequestBody

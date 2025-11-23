@@ -1,4 +1,4 @@
-package handler
+package team
 
 func (h *Handler) GetTeamGet(c *gin.Context, params api.GetTeamGetParams) {
 
