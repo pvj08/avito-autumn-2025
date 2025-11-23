@@ -67,27 +67,3 @@ func reassignChooseReviewer(team domain.Team, authorID, exceptID string) (string
 	// выбираем случайно одного
 	return candidates[rand.Intn(len(candidates))], nil
 }
-
-// toDomainPullRequest маппит входной CreateInput + выбранных ревьюверов в domain.PullRequest.
-func fromAddInputToDomainPR(input CreateInput, reviewers []string) domain.PullRequest {
-	return domain.PullRequest{
-		PullRequestID:     input.PullRequestID,
-		PullRequestName:   input.PullRequestName,
-		AuthorID:          input.AuthorID,
-		AssignedReviewers: reviewers,
-		Status:            domain.PullRequestStatusOPEN,
-	}
-}
-
-// fromDomainPullRequest маппит domain.PullRequest в DTO PullRequest (ответ API).
-func fromDomainPullRequest(pr domain.PullRequest) PullRequest {
-	return PullRequest{
-		PullRequestID:     pr.PullRequestID,
-		PullRequestName:   pr.PullRequestName,
-		AuthorID:          pr.AuthorID,
-		AssignedReviewers: pr.AssignedReviewers,
-		Status:            PullRequestStatus(pr.Status),
-		CreatedAt:         pr.CreatedAt,
-		MergedAt:          pr.MergedAt,
-	}
-}
