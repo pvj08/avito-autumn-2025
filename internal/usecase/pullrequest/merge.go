@@ -33,7 +33,7 @@ func (u *usecase) Merge(c context.Context, input MergeInput) (MergeOutput, error
 		pr.Merge()
 
 		// сохраняем изменения в репозитории
-		if err := u.prRepo.Save(ctx, pr); err != nil {
+		if err := u.prRepo.Update(ctx, pr); err != nil {
 			return err
 		}
 

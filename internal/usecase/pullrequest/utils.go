@@ -41,8 +41,8 @@ func chooseReviewers(team domain.Team, authorID string) ([]string, error) {
 	return candidates[:2], nil
 }
 
-// выбирает одного ревьювера из команды, исключая ID автора и exceptID.
-func reassignChooseReviewer(team domain.Team, authorID, exceptID string) (string, error) {
+// выбирает одного ревьювера из команды, исключая все exceptID.
+func reassignChooseReviewer(team domain.Team, exceptIDS ...string) (string, error) {
 	candidates := make([]string, 0, len(team.Members))
 
 	// 1. фильтруем активных участников команды, исключая автора и exceptID
@@ -50,10 +50,7 @@ func reassignChooseReviewer(team domain.Team, authorID, exceptID string) (string
 		if !m.IsActive {
 			continue
 		}
-		if m.UserID == authorID {
-			continue
-		}
-		if m.UserID == exceptID {
+		if contains(exceptIDS, m.UserID) {
 			continue
 		}
 		candidates = append(candidates, m.UserID)
@@ -66,4 +63,13 @@ func reassignChooseReviewer(team domain.Team, authorID, exceptID string) (string
 
 	// выбираем случайно одного
 	return candidates[rand.Intn(len(candidates))], nil
+}
+
+func contains(slice []string, v string) bool {
+	for _, s := range slice {
+		if s == v {
+			return true
+		}
+	}
+	return false
 }

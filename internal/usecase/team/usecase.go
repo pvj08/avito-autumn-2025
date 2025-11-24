@@ -74,3 +74,20 @@ func fromDomainTeam(t domain.Team) Team {
 		Members:  members,
 	}
 }
+
+func toDomainUser(member TeamMember, tname string) domain.User {
+	return domain.User{
+		IsActive: member.IsActive,
+		UserID:   member.UserID,
+		Username: member.Username,
+		TeamName: tname,
+	}
+}
+
+func toTeamMember(u domain.User) domain.TeamMember {
+	return domain.TeamMember{
+		IsActive: u.IsActive,
+		UserID:   u.UserID,
+		Username: u.Username,
+	}
+}

@@ -22,8 +22,11 @@ func (h *Handler) PostPullRequestCreate(c *gin.Context) {
 	})
 
 	if err != nil {
-		errResp := mapErrorToErrorResponse(err)
-		c.JSON(500, errResp) // TODO: proper status code
+		status, resp := mapDomainErrorToErrorResponse(err)
+		if status == http.StatusInternalServerError {
+			h.log.Error("internal error", "error", err)
+		}
+		c.JSON(status, resp)
 		return
 	}
 
@@ -37,5 +40,5 @@ func (h *Handler) PostPullRequestCreate(c *gin.Context) {
 		},
 	}
 
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusCreated, resp)
 }

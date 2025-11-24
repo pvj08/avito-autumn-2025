@@ -9,6 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/pvj08/avito-autumn-2025/internal/domain"
 	"github.com/pvj08/avito-autumn-2025/internal/infrastructure/txmanager"
 )
@@ -152,41 +153,40 @@ func (r *PullRequestRepo) GetByUserID(ctx context.Context, userID string) ([]dom
 	return res, nil
 }
 
-// // Update — обновить существующий PR по его ID.
-// func (r *PullRequestRepo) Update(ctx context.Context, pr domain.PullRequest) error {
-// 	const q = `
-// 		UPDATE pull_requests
-// 		SET author_id          = $2,
-// 		    pull_request_name  = $3,
-// 		    status             = $4,
-// 		    assigned_reviewers = $5,
-// 		    created_at         = $6,
-// 		    merged_at          = $7
-// 		WHERE pull_request_id  = $1
-// 	`
+// Update — обновить существующий PR по его ID.
+func (r *PullRequestRepo) Update(ctx context.Context, pr domain.PullRequest) error {
+	const q = `
+		UPDATE pull_requests
+		SET author_id          = $2,
+		    pull_request_name  = $3,
+		    status             = $4,
+		    assigned_reviewers = $5,
+		    created_at         = $6,
+		    merged_at          = $7
+		WHERE pull_request_id  = $1
+	`
 
-// 	row := toRow(pr)
-// 	exec := r.exec(ctx)
+	row := toRow(pr)
+	exec := r.exec(ctx)
 
-// 	_, err := exec.ExecContext(
-// 		ctx,
-// 		q,
-// 		row.PullRequestID,
-// 		row.AuthorID,
-// 		row.PullRequestName,
-// 		row.Status,
-// 		row.AssignedReviewers,
-// 		row.CreatedAt,
-// 		row.MergedAt,
-// 	)
-// 	if err != nil {
-// 		return fmt.Errorf("update pull_request: %w", err)
-// 	}
+	_, err := exec.ExecContext(
+		ctx,
+		q,
+		row.PullRequestID,
+		row.AuthorID,
+		row.PullRequestName,
+		row.Status,
+		row.AssignedReviewers,
+		row.CreatedAt,
+		row.MergedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("update pull_request: %w", err)
+	}
 
-// 	return nil
-// }
+	return nil
+}
 
-// Save — upsert по pull_request_id.
 func (r *PullRequestRepo) Save(ctx context.Context, pr domain.PullRequest) error {
 	const q = `
 		INSERT INTO pull_requests (
@@ -228,13 +228,13 @@ func (r *PullRequestRepo) Save(ctx context.Context, pr domain.PullRequest) error
 
 // внутренняя структура для маппинга в БД
 type pullRequestRow struct {
-	PullRequestID     string     `db:"pull_request_id"`
-	AuthorID          string     `db:"author_id"`
-	PullRequestName   string     `db:"pull_request_name"`
-	Status            string     `db:"status"`
-	AssignedReviewers []string   `db:"assigned_reviewers"`
-	CreatedAt         time.Time  `db:"created_at"`
-	MergedAt          *time.Time `db:"merged_at"`
+	PullRequestID     string         `db:"pull_request_id"`
+	AuthorID          string         `db:"author_id"`
+	PullRequestName   string         `db:"pull_request_name"`
+	Status            string         `db:"status"`
+	AssignedReviewers pq.StringArray `db:"assigned_reviewers"`
+	CreatedAt         time.Time      `db:"created_at"`
+	MergedAt          *time.Time     `db:"merged_at"`
 }
 
 // domain -> row

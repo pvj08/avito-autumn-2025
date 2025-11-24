@@ -2,12 +2,11 @@ package pullrequest
 
 import (
 	"context"
-	"errors"
 	"fmt"
-
-	"github.com/pvj08/avito-autumn-2025/internal/domain"
 )
 
+// Не проверяет есть ли user в таблице вообще.
+// Если не находит назначенных PR этому юзеру, вернут пустой слайс PRShort
 func (u *usecase) GetReview(c context.Context, input GetReviewInput) (GetReviewOutput, error) {
 	var out GetReviewOutput
 
@@ -15,9 +14,6 @@ func (u *usecase) GetReview(c context.Context, input GetReviewInput) (GetReviewO
 		// достаём pull request по ID
 		prs, err := u.prRepo.GetByUserID(ctx, input.UserID)
 		if err != nil {
-			if errors.Is(err, domain.ErrNotFound) {
-				return err
-			}
 			return fmt.Errorf("failed to get team: %w", err)
 		}
 

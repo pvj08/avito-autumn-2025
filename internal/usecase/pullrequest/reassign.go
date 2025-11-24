@@ -39,6 +39,15 @@ func (u *usecase) Reassign(c context.Context, input ReassignInput) (ReassignOutp
 			return domain.ErrNotAssigned
 		}
 
+		var secondReviewerID string
+		if len(pr.AssignedReviewers) == 2 {
+			if idx == 0 {
+				secondReviewerID = pr.AssignedReviewers[1]
+			} else {
+				secondReviewerID = pr.AssignedReviewers[0]
+			}
+		}
+
 		// 4. Берём команду ревьювера и список участников
 		team, err := u.teamReader.GetByUserID(ctx, input.UserID)
 		if err != nil {
@@ -48,17 +57,20 @@ func (u *usecase) Reassign(c context.Context, input ReassignInput) (ReassignOutp
 			return fmt.Errorf("failed to get team: %w", err)
 		}
 
-		// 5. Формируем список кандидатов: исключаем автора и текущих ревьюверов
-		newReviewerID, err := reassignChooseReviewer(team, pr.AuthorID, input.UserID)
+		// 5. Формируем список кандидатов:
+		// Исключаем автора
+		// Юзера из input
+		// Второго ревьювера (если есть)
+		newReviewerID, err := reassignChooseReviewer(team, pr.AuthorID, input.UserID, secondReviewerID)
 		if err != nil {
-			return err
+			return err // ErrNoCandidate
 		}
 
 		// 7. Заменяем старого ревьювера на нового
 		pr.AssignedReviewers[idx] = newReviewerID
 
 		// 8. Сохраняем изменения
-		if err := u.prRepo.Save(ctx, pr); err != nil {
+		if err := u.prRepo.Update(ctx, pr); err != nil {
 			return err
 		}
 

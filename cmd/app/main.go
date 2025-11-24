@@ -78,7 +78,7 @@ func AppRun(ctx context.Context, cfg config.Config, log logger.Logger) error {
 	r := gin.Default()
 
 	// HTTP handlers
-	h := handler.NewHandler(userUC, teamUC, prUC)
+	h := handler.NewHandler(userUC, teamUC, prUC, log)
 
 	// Регистрация хендлеров, сгенерированных из OpenAPI
 	api.RegisterHandlers(r, h)

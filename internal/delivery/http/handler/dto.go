@@ -62,7 +62,7 @@ type PostTeamAddResponse struct {
 }
 
 type GetTeamGetResponse struct {
-	Team Team `json:"team"`
+	Team // `json:"team"`
 }
 
 type GetUsersGetReviewResponse struct {

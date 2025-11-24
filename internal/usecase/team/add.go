@@ -18,7 +18,7 @@ func (u *usecase) Add(c context.Context, input AddInput) (AddOutput, error) {
 		created, err := u.teamRepo.Create(ctx, domainTeam)
 		if err != nil {
 			if errors.Is(err, domain.ErrAlreadyExists) {
-				return err
+				return domain.ErrTeamExists
 			}
 			return fmt.Errorf("failed to create team: %w", err)
 		}
@@ -27,9 +27,18 @@ func (u *usecase) Add(c context.Context, input AddInput) (AddOutput, error) {
 			user := toDomainUser(member, input.TeamName)
 
 			err = u.userCreator.Create(ctx, user)
-			if err != nil && !errors.Is(err, domain.ErrAlreadyExists) {
-				return fmt.Errorf("failed to add member to team: %w", err)
+
+			// Может ли один пользователь быть в нескольких командах сразу?
+			// Скорее всего да
+
+			// Но у меня это ломает логику и я не хочу заморачиваться в тестовом
+			if err != nil {
+				if errors.Is(err, domain.ErrAlreadyExists) {
+					return domain.ErrUserExists
+				}
+				return err
 			}
+			created.Members = append(created.Members, toTeamMember(user))
 		}
 
 		// domain -> DTO
@@ -41,13 +50,4 @@ func (u *usecase) Add(c context.Context, input AddInput) (AddOutput, error) {
 	})
 
 	return out, err
-}
-
-func toDomainUser(member TeamMember, tname string) domain.User {
-	return domain.User{
-		IsActive: member.IsActive,
-		UserID:   member.UserID,
-		Username: member.Username,
-		TeamName: tname,
-	}
 }

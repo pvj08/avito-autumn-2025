@@ -14,9 +14,11 @@ func (h *Handler) GetTeamGet(c *gin.Context, params api.GetTeamGetParams) {
 	})
 
 	if err != nil {
-		errResp := mapErrorToErrorResponse(err)
-		// TODO: различать 404 / 500 и т.п.
-		c.JSON(http.StatusInternalServerError, errResp)
+		status, resp := mapDomainErrorToErrorResponse(err)
+		if status == http.StatusInternalServerError {
+			h.log.Error("internal error", "error", err)
+		}
+		c.JSON(status, resp)
 		return
 	}
 

@@ -33,7 +33,7 @@ func (u *usecase) Create(c context.Context, input CreateInput) (CreateOutput, er
 		created, err := u.prRepo.Create(ctx, pr)
 		if err != nil {
 			if errors.Is(err, domain.ErrAlreadyExists) {
-				return err
+				return domain.ErrPrExists
 			}
 			return fmt.Errorf("failed to create pullrequest: %w", err)
 		}
