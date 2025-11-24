@@ -7,7 +7,7 @@ import (
 )
 
 // выбирает до 2 активных ревьюверов из команды, исключая ID автора.
-func chooseReviewers(team domain.Team, authorID string) ([]string, error) {
+func chooseReviewers(team domain.Team, authorID string) []string {
 	candidates := make([]string, 0, len(team.Members))
 
 	// 1. фильтруем подходящих
@@ -23,12 +23,12 @@ func chooseReviewers(team domain.Team, authorID string) ([]string, error) {
 
 	// 2. нет кандидатов
 	if len(candidates) == 0 {
-		return []string{}, domain.ErrNoCandidate
+		return []string{}
 	}
 
 	// 3. один кандидат
 	if len(candidates) == 1 {
-		return []string{candidates[0]}, nil
+		return []string{candidates[0]}
 	}
 
 	// 4. два или больше — выбираем случайные два
@@ -38,7 +38,7 @@ func chooseReviewers(team domain.Team, authorID string) ([]string, error) {
 	})
 
 	// берём первые два
-	return candidates[:2], nil
+	return candidates[:2]
 }
 
 // выбирает одного ревьювера из команды, исключая все exceptID.

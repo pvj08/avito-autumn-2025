@@ -22,10 +22,7 @@ func (u *usecase) Create(c context.Context, input CreateInput) (CreateOutput, er
 		}
 
 		// 2. выбираем до 2 активных ревьюверов
-		reviewers, err := chooseReviewers(team, input.AuthorID)
-		if err != nil {
-			return err
-		}
+		reviewers := chooseReviewers(team, input.AuthorID)
 
 		// 3. собираем доменную модель
 		pr := fromAddInputToDomainPR(input, reviewers)

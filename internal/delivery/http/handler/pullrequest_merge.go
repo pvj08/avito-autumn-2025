@@ -25,7 +25,7 @@ func (h *Handler) PostPullRequestMerge(c *gin.Context) {
 		if status == http.StatusInternalServerError {
 			h.log.Error("internal error", "error", err)
 		}
-		c.JSON(status, resp) // TODO: proper status code
+		c.JSON(status, resp)
 		return
 	}
 
