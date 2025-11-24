@@ -21,7 +21,7 @@ type UserCreator interface {
 type Usecase interface {
 	// Создать команду с участниками (создаёт/обновляет пользователей)
 	Add(c context.Context, input AddInput) (AddOutput, error)
-	// Get(c context.Context, input GetInput) (GetOutput, error)
+	Get(c context.Context, input GetInput) (GetOutput, error)
 }
 
 type usecase struct {

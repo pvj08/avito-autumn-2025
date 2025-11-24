@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE pull_requests (
     pull_request_id    TEXT PRIMARY KEY,
     author_id          TEXT NOT NULL,
@@ -18,3 +19,8 @@ CREATE TABLE users (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     team_name TEXT NOT NULL REFERENCES teams(team_name)
 );
+
+-- +goose Down
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS teams;
+DROP TABLE IF EXISTS pull_requests;

@@ -14,15 +14,15 @@ import (
 )
 
 type Config struct {
-	User     string `envconfig:"POSTGRES_USER"     required:"true"`
-	Password string `envconfig:"POSTGRES_PASSWORD" required:"true"`
-	Port     string `envconfig:"POSTGRES_PORT"     required:"true"`
-	Host     string `envconfig:"POSTGRES_HOST"     required:"true"`
-	DBName   string `envconfig:"POSTGRES_DB_NAME"  required:"true"`
+	User     string `env:"USER"     env-required:"true"`
+	Password string `env:"PASSWORD" env-required:"true"`
+	Port     string `env:"PORT"     env-required:"true"`
+	Host     string `env:"HOST"     env-required:"true"`
+	DBName   string `env:"DB_NAME"  env-required:"true"`
 
-	SSLMode    string        `envconfig:"POSTGRES_SSL_MODE"  default:"disable"`
-	RetryCount int           `envconfig:"POSTGRES_RETRY_CNT" default:"3"`
-	RetryDelay time.Duration `envconfig:"POSTGRES_RETRY_DUR" default:"2s"`
+	SSLMode    string        `env:"SSL_MODE"  env-default:"disable"`
+	RetryCount int           `env:"RETRY_CNT" env-default:"3"`
+	RetryDelay time.Duration `env:"RETRY_DUR" env-default:"2s"`
 }
 
 type dbExecutor interface {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/pvj08/avito-autumn-2025/internal/delivery/http/api"
 	"github.com/pvj08/avito-autumn-2025/internal/delivery/http/handler"
+	"github.com/pvj08/avito-autumn-2025/internal/infrastructure/migrations"
 	"github.com/pvj08/avito-autumn-2025/internal/infrastructure/postgres"
 	"github.com/pvj08/avito-autumn-2025/internal/infrastructure/txmanager"
 	"github.com/pvj08/avito-autumn-2025/internal/usecase/pullrequest"
@@ -23,14 +25,23 @@ import (
 )
 
 func main() {
+	// Конфиг
 	cfg := config.MustLoad()
 
+	// Логгер
 	log := logger.SetupLogger(cfg.Logger)
 
-	err := AppRun(context.Background(), cfg, log)
-	if err != nil {
+	// Контекст, завязанный на сигналы ОС
+	ctx, stop := signal.NotifyContext(context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
+		syscall.SIGINT,
+	)
+	defer stop()
+
+	if err := AppRun(ctx, cfg, log); err != nil {
 		log.Error("application run failed", "error", err)
-		panic(err)
+		os.Exit(1)
 	}
 }
 
@@ -40,60 +51,69 @@ func AppRun(ctx context.Context, cfg config.Config, log logger.Logger) error {
 	if err != nil {
 		return fmt.Errorf("postgres.New: %w", err)
 	}
+	defer func() {
+		if err := pg.Close(); err != nil {
+			log.Error("postgres close failed", "error", err)
+		}
+	}()
+
+	if err := migrations.Up(pg.DB, cfg.Migrations); err != nil {
+		return fmt.Errorf("migrations up: %w", err)
+	}
 
 	// TxManager
 	txMgr := txmanager.NewSqlx(pg)
 
-	// Repos
+	// Repositories
 	userRepo := postgres.NewUserRepo(pg)
 	teamRepo := postgres.NewTeamRepo(pg)
 	prRepo := postgres.NewPullRequestRepo(pg)
 
-	// Usecase (Service)
+	// Usecases
 	userUC := user.New(txMgr, userRepo, log)
-	teamUC := team.New(txMgr, teamRepo, log)
-	prUC := pullrequest.New(txMgr, prRepo, log)
+	teamUC := team.New(txMgr, teamRepo, userRepo, log)
+	prUC := pullrequest.New(txMgr, prRepo, teamRepo, log)
 
+	// HTTP router
 	r := gin.Default()
-	h := handler.NewHandler(userUC, teamUC, prUC)
-	server := httpserver.NewServer(log, cfg.Server, r)
 
-	// функция из openapi_server.gen.go
+	// HTTP handlers
+	h := handler.NewHandler(userUC, teamUC, prUC)
+
+	// Регистрация хендлеров, сгенерированных из OpenAPI
 	api.RegisterHandlers(r, h)
 
-	// опционально: healthcheck
+	// Healthcheck
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// Приложение запущено и готово к работе
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	// HTTP сервер-обёртка
+	server := httpserver.NewServer(log, cfg.Server, r)
 
-	<-sig // ждём здесь сигнала (Ctrl+C или SIGTERM)
-	log.Info("shutdown signal received")
+	// Горутинa, которая ждёт отмены контекста
+	go func() {
+		<-ctx.Done()
 
-	// Закрываем ресурсы
-	httpServer.Close()
-	pgPool.Close()
+		log.Info("shutdown: context canceled")
 
+		if err := server.Close(); err != nil {
+			log.Error("server close failed", "err", err)
+		} else {
+			log.Info("server closed gracefully")
+		}
+	}()
+
+	log.Info("starting http server", "addr", fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port))
+
+	// Блокирующий запуск сервера
+	if err := server.Run(); err != nil {
+		// Ожидаемое завершение — http.ErrServerClosed
+		if !errors.Is(err, http.ErrServerClosed) {
+			return fmt.Errorf("http server run: %w", err)
+		}
+	}
+
+	log.Info("http server stopped")
 	return nil
 }
-
-// MAIN TODO:
-// Нужно сделать отдельный usecase для каждой доменной сущности
-// Чтобы разграничить его интерфейс и не получить god service
-
-/*
-
-Небольшая рефлексия.
-Кодогенерацией сделан рутинг и дто модели.
-Что мне нужно сделать? Очевидно, хендлеры и бизнес логику.
-
-в models
-*/
-
-// TODO:
-// 1. PullRequest ID в бд должен быть уникальным
-// 2. При создании ПР, если такой уже есть, возвращать ошибку PREXISTS
-// 3. При мердже ПР, если его нет, возвращать ошибку NOTFOUND

@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	Level string `envconfig:"LOG_LEVEL"     required:"true"`
+	Level string `env:"LEVEL"     required:"true"`
 }
 
 type Logger interface {

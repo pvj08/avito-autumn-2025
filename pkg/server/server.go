@@ -10,13 +10,13 @@ import (
 )
 
 type Config struct {
-	Host            string        `env:"HTTP_HOST"             env-default:"0.0.0.0"`
-	Port            int           `env:"HTTP_PORT"             env-default:"8080"`
-	ReadTimeout     time.Duration `env:"HTTP_READ_TIMEOUT"     env-default:"5s"`
-	WriteTimeout    time.Duration `env:"HTTP_WRITE_TIMEOUT"    env-default:"10s"`
-	IdleTimeout     time.Duration `env:"HTTP_IDLE_TIMEOUT"     env-default:"60s"`
-	MaxHeaderBytes  int           `env:"HTTP_MAX_HEADER_BYTES" env-default:"1048576"` // 1MB
-	ShutdownTimeout time.Duration `env:"HTTP_SHUTDOWN_TIMEOUT" env-default:"10s"`
+	Host            string        `env:"HOST"             env-default:"0.0.0.0"`
+	Port            int           `env:"PORT"             env-default:"8080"`
+	ReadTimeout     time.Duration `env:"READ_TIMEOUT"     env-default:"5s"`
+	WriteTimeout    time.Duration `env:"WRITE_TIMEOUT"    env-default:"10s"`
+	IdleTimeout     time.Duration `env:"IDLE_TIMEOUT"     env-default:"60s"`
+	MaxHeaderBytes  int           `env:"MAX_HEADER_BYTES" env-default:"1048576"` // 1MB
+	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" env-default:"10s"`
 }
 
 type Server struct {
